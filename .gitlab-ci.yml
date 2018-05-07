@@ -1,39 +1,14 @@
 image: openjdk:8-jdk
 
-before_script:
-
-  # Extract the SDK version that we're building against
-  - export ANDROID_COMPILE_SDK=`egrep '^[[:blank:]]+compileSdkVersion'  app/build.gradle | awk '{print $2}'`
-  - export ANDROID_SDK_TOOLS=3859397
-
-  # Explict output for logging purpose only
-  - echo $ANDROID_SDK_TOOLS
-  - echo $ANDROID_COMPILE_SDK
-
-  # Fetch the specified SDK tools version to build with
-  - wget --quiet --output-document=/tmp/sdk-tools-linux.zip https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_TOOLS}.zip
-  - unzip /tmp/sdk-tools-linux.zip -d .android
-
-  # Set up environment variables
-  - export ANDROID_HOME=$PWD/.android
-  - export GRADLE_USER_HOME=$PWD/gradle
-  - export PATH=$PATH:$PWD/.android/platform-tools/
-
-  # Install platform tools and Android SDK for the compile target
-  - echo y | .android/tools/bin/sdkmanager "platforms;android-${ANDROID_COMPILE_SDK}"
-
-  - chmod +x ./gradlew
-  
 stages:
   - build
   - test
-  - quality
   - package
 
 
-#############################################################################
-# 								BUILD
-#############################################################################
+####################################################################################################
+# BUILD
+#
 .build_template: &build_template_def
   stage: build
   artifacts:
@@ -41,7 +16,28 @@ stages:
     paths:
     - app/build/outputs/
     - .android/
-    - gradle/
+
+  before_script:
+    # Extract the SDK version that we're building against
+    - export ANDROID_COMPILE_SDK=`egrep '^[[:blank:]]+compileSdkVersion'  app/build.gradle | awk '{print $2}'`
+    - export ANDROID_SDK_TOOLS=3859397
+
+    # Explict output for logging purpose only
+    - echo $ANDROID_SDK_TOOLS
+    - echo $ANDROID_COMPILE_SDK
+
+    # Fetch the specified SDK tools version to build with
+    - wget --quiet --output-document=/tmp/sdk-tools-linux.zip https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_TOOLS}.zip
+    - unzip /tmp/sdk-tools-linux.zip -d .android
+
+    # Set up environment variables
+    - export ANDROID_HOME=$PWD/.android
+    - export PATH=$PATH:$PWD/.android/platform-tools/
+
+    # Install platform tools and Android SDK for the compile target
+    - echo y | .android/tools/bin/sdkmanager "platforms;android-${ANDROID_COMPILE_SDK}"
+
+    - chmod +x ./gradlew
 
 build_debug:
   <<: *build_template_def
@@ -58,9 +54,9 @@ build_release:
   script:
     - ./gradlew assembleRelease
 
-#############################################################################
-#							 UNIT TESTING
-#############################################################################
+####################################################################################################
+# UNIT TESTING
+#
 
 unit_test:
   stage: test
@@ -69,67 +65,32 @@ unit_test:
     - develop
 
   before_script:
-  
-      # Set up environment variables
     - export ANDROID_HOME=$PWD/.android
     - export PATH=$PATH:$PWD/.android/platform-tools/
-    
-      # Gradle home properties
-    - export GRADLE_USER_HOME=$PWD/gradle
-  
-    - chmod +x ./gradlew
 
   script:
     - ./gradlew test
 
-#############################################################################
-# 			QUALITY CHECK LIKE LINT, CHECKSTYLE, PMD, FINDBUGS
-#############################################################################
 
-static_analysis:
-  stage: quality
-  before_script:
-    
-    # Set up environment variables
-  - export ANDROID_HOME=$PWD/.android
-  - export PATH=$PATH:$PWD/.android/platform-tools/
-  
-    # Gradle home properties
-  - export GRADLE_USER_HOME=$PWD/gradle
-  
-  - chmod +x ./gradlew
-  
-  script:
-    - ./gradlew lint
-  artifacts:
-    expire_in: 4 days
-    paths:
-      - app/build/reports/
-      
-#############################################################################
-# 						PACKAGE APK FOR DOWNLOADING
-#############################################################################
+####################################################################################################
+# PACKAGE APK FOR DOWNLOADING
+#
 
 .package_template: &package_template_def
   before_script:
-  
-    - export APPLICATION_NAME=`egrep '^[[:blank:]]+applicationId[[:blank:]]'  app/build.gradle | awk '{print $2}' | sed s/\"//g`
     - export VERSION_NAME=`egrep '^[[:blank:]]+versionName[[:blank:]]'  app/build.gradle | awk '{print $2}' | sed s/\"//g`
     - export VERSION_CODE=`egrep '^[[:blank:]]+versionCode[[:blank:]]'  app/build.gradle | awk '{print $2}'`
-    
-    - export BUILD_DATE=$(date +%Y%m%d)
-
     - mkdir -p deliverables
 
     # Store some information about the build
     - touch ./deliverables/info.txt
-    - echo "Application Name    ${APPLICATION_NAME}"    >> ./deliverables/info.txt
     - echo "Build date          $(date)"                >> ./deliverables/info.txt
     - echo "App version name    ${VERSION_NAME}"        >> ./deliverables/info.txt
     - echo "App version code    ${VERSION_CODE}"        >> ./deliverables/info.txt
     - echo "Git branch          ${CI_COMMIT_REF_NAME}"  >> ./deliverables/info.txt
     - echo "Git commit          ${CI_COMMIT_SHA}"       >> ./deliverables/info.txt
     - echo "Gitlab pipeline     ${CI_PIPELINE_ID}"      >> ./deliverables/info.txt
+
 
 package_develop:
   <<: *package_template_def
@@ -138,11 +99,7 @@ package_develop:
   only:
     - develop
   script:
-
-    - mv app/build/outputs/apk/*.apk ./deliverables/debug-app_${APPLICATION_NAME}_${VERSION_NAME}.${BUILD_DATE}.${VERSION_CODE}.apk
-    - mv app/build/reports/*.html ./deliverables/debug-app_${APPLICATION_NAME}_${VERSION_NAME}.${BUILD_DATE}.${VERSION_CODE}.html
-    - mv app/build/reports/*.xml ./deliverables/debug-app_${APPLICATION_NAME}_${VERSION_NAME}.${BUILD_DATE}.${VERSION_CODE}.xml
-
+    - mv app/build/outputs/apk/app-debug.apk ./deliverables/NameOfTheApp-v$VERSION_NAME-$VERSION_CODE-debug.apk
   artifacts:
     expire_in: 3 days
     paths:
@@ -155,11 +112,7 @@ package_release:
   only:
     - master
   script:
-
-    - mv app/build/outputs/apk/release/*.apk ./deliverables/app_${APPLICATION_NAME}_${VERSION_NAME}.${BUILD_DATE}.${VERSION_CODE}.apk
-    - mv app/build/reports/*.html ./deliverables/app_${APPLICATION_NAME}_${VERSION_NAME}.${BUILD_DATE}.${VERSION_CODE}.html
-    - mv app/build/reports/*.xml ./deliverables/app_${APPLICATION_NAME}_${VERSION_NAME}.${BUILD_DATE}.${VERSION_CODE}.xml
-
+    - mv app/build/outputs/apk/app-release.apk ./deliverables/NameOfTheApp-v$VERSION_NAME-$VERSION_CODE-release.apk
   artifacts:
     expire_in: 4 weeks
     paths:
