@@ -81,6 +81,12 @@ unit_test:
 
   script:
     - ./gradlew test
+  artifacts:
+    name: "reports_${CI_PROJECT_NAME}_${CI_BUILD_REF_NAME}"
+    when: on_failure
+    expire_in: 4 days
+    paths:
+      - app/build/reports/tests/
 
 #############################################################################
 # 			QUALITY CHECK LIKE LINT, CHECKSTYLE, PMD, FINDBUGS
@@ -139,7 +145,7 @@ package_develop:
     - develop
   script:
 
-    - mv app/build/outputs/apk/*.apk ./deliverables/debug-app_${APPLICATION_NAME}_${VERSION_NAME}.${BUILD_DATE}.${VERSION_CODE}.apk
+    - mv app/build/outputs/apk/debug/*.apk ./deliverables/debug-app_${APPLICATION_NAME}_${VERSION_NAME}.${BUILD_DATE}.${VERSION_CODE}.apk
     - mv app/build/reports/*.html ./deliverables/debug-app_${APPLICATION_NAME}_${VERSION_NAME}.${BUILD_DATE}.${VERSION_CODE}.html
     - mv app/build/reports/*.xml ./deliverables/debug-app_${APPLICATION_NAME}_${VERSION_NAME}.${BUILD_DATE}.${VERSION_CODE}.xml
 
