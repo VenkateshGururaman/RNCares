@@ -8,7 +8,6 @@
     <string name="service_activated">Service Activated</string>
     <string name="service_deactivated">Service Deactivated</string>
 
-    <string name="gcm_defaultSenderId">rn-cares</string>
     <string name="gcm_projectNumber">312397563097</string>
     <string name="api_key">AIzaSyCKTkZ9EHRUmMjJHgSyPaamVFtEbqGSmq4</string>
 

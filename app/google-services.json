@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "229873153316",
+    "firebase_url": "https://rn-cares-3c2b9.firebaseio.com",
+    "project_id": "rn-cares-3c2b9",
+    "storage_bucket": "rn-cares-3c2b9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:229873153316:android:54b63bd6dfa48c4b",
+        "android_client_info": {
+          "package_name": "com.renault.rncares"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "229873153316-2cljegngsftm7pknaaccuh77ct02akmj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAykyVARw8G1jAAjJcqofcMIOA-YXlamBI"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
